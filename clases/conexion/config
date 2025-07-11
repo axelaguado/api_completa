@@ -1,0 +1,11 @@
+{
+    "conexion" : {
+        "server": "localhost",
+        "user": "root",
+        "password": "",
+        "database": "t-store",
+        "port": "3306"
+    }
+}
+
+
