@@ -54,5 +54,5 @@
     
     // Tengo mal la hora y fecha xd
     echo ( $date = date('Y-m-d H:i:s'));
-
+    
 ?>

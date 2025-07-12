@@ -6,6 +6,7 @@ $_producto = new producto();
 $_response = new respuesta();
 
     if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+        
         if (isset($_GET['page'])){
             $pagina = $_GET['page'];
             $datosArray = $_producto->listarProductos($pagina);
@@ -15,13 +16,35 @@ $_response = new respuesta();
             $datosArray = $_producto->obtenerProducto($productoId);
             echo json_encode($datosArray);
         }
-
+   
+        
     } else if($_SERVER['REQUEST_METHOD'] == 'POST'){
-        echo 'hola POST';
+        
+        // Obtenemos los datos del json.
+        $response = file_get_contents("php://input");
+
+        // Procesamos los datos.
+        $datosArray = $_producto->post($response); 
+        
+        // Devolvemos una respuesta.
+        header('Content-type: application/json');
+        if (isset($datosArray['result']['error_id'])) {
+            $responseCode = $datosArray['result']['error_id'];
+            http_response_code($responseCode);
+        } else {
+            http_response_code(200);
+        }
+        
+        echo json_encode($datosArray); 
+
     } else if($_SERVER['REQUEST_METHOD'] == 'PUT') {
+        
         echo 'hola PUT';
+
     } else if($_SERVER['REQUEST_METHOD'] == 'DELETE') {
+        
         echo 'hola DELETE';
+        
     } else {
         header('Content-type: application/json');
         $datosArray = $_response->error_405();
