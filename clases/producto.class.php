@@ -108,6 +108,70 @@ class producto extends conexion {
         } 
     }
 
+    public function put($json) 
+    {
+        $respuesta = new respuesta;
+        
+        //Como lo que recibimos es un json, primero lo decodificamos como array asociativo. 
+        $datos = json_decode($json, true);
+
+        if(!isset($datos['productoId']))  
+        {
+            return $respuesta->error_400();
+        } 
+        else
+        {
+            //Falta manejar errores de las variable no asignadas.
+            $this->productoId = $datos['productoId'];
+
+            if(isset($datos['marca'])){
+                $this->marca =  $datos['marca'];
+            }
+            
+            if(isset($datos['modelo'])){
+                $this->modelo =  $datos['modelo'];
+            }
+             
+            if(isset($datos['categoria'])){
+                 $this->categoria =  $datos['categoria'];
+            } 
+
+            if(isset($datos['precio'])){
+               $this->precio =  $datos['precio'];
+            }
+             
+            if(isset($datos['stock'] )){
+                $this->stock = $datos['stock']  ;
+            }
+
+            if(isset( $datos['descripcion'])){
+                $this->descripcion = $datos['descripcion'] ;
+            } 
+
+            // Ver que onda el tratamiento de imagenes.
+            if(isset($datos['imagen'] )){
+                $this->imagen =  $datos['imagen'];
+            }
+
+            if(isset($datos['estado'] )){
+                 $this->estado =  $datos['estado'];  
+            } 
+
+            $response = $this->actualizarProducto();  
+ 
+            if ($response < 1) {
+                return  $respuesta->error_500(); 
+            } else {
+                $result = $respuesta->response;
+                $result['result'] = array(
+                    'Producto' => 'El producto se actualizo correctamente [' . $response . ']' 
+                );
+                return $result;
+            } 
+        } 
+
+    }
+
 
     // Implementamos metodo que gestione la insercion.
     public function insertarProducto()
@@ -120,6 +184,19 @@ class producto extends conexion {
 
         $verificar = parent::nonQuery($query); 
  
+        return $verificar;   
+    } 
+
+    // Implementamos metodo para gestionar la actualizacion.
+     public function actualizarProducto()
+    {
+        // Ya hemos verificado que la query se forme como corresponde. 
+        $query = "UPDATE " . $this->table . " SET marca = '" .  $this->marca . "', modelo = '" . $this->modelo . "', categoria = " . $this->categoria 
+        . ", precio = " . $this->precio . ", stock = " . $this->stock . ", descripcion = '" . $this->descripcion . "', imagen = '" . $this->imagen 
+        . "', estado = " . $this->estado . " WHERE productoId = " . $this->productoId;
+ 
+        $verificar = parent::nonQuery($query);  
+        
         return $verificar;   
     } 
 }
