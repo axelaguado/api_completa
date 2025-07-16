@@ -172,9 +172,33 @@ class producto extends conexion {
 
     }
 
+    public function delete($json){
+        $respuesta = new respuesta;
 
-    // Implementamos metodo que gestione la insercion.
-    public function insertarProducto()
+        $datosArray = json_decode($json, true);
+
+        if(!isset($datosArray['productoId'])){
+            return $respuesta->error_400();
+        }else {
+            $this->productoId = $datosArray['productoId'];
+
+            $response = $this->eliminarProducto(); 
+             
+            if ($response < 1) {
+                return $respuesta->error_500();
+            } else {
+                $result = $respuesta->response;
+                $result['result'] = array( 
+                    'Producto' => 'El producto se dio de baja correctamente. ['. $response . ']' 
+                );   
+                return $result;
+            }   
+        } 
+    }
+
+
+    // Implementamos metodo que ejecutar la insercion.
+    private function insertarProducto()
     {
         // Ya hemos verificado que la query se forme como corresponde.
         $query = "INSERT INTO " . $this->table . " (productoId, marca, modelo, categoria, precio, stock,
@@ -187,8 +211,8 @@ class producto extends conexion {
         return $verificar;   
     } 
 
-    // Implementamos metodo para gestionar la actualizacion.
-     public function actualizarProducto()
+    // Implementamos metodo para ejecutar la actualizacion.
+    private function actualizarProducto()
     {
         // Ya hemos verificado que la query se forme como corresponde. 
         $query = "UPDATE " . $this->table . " SET marca = '" .  $this->marca . "', modelo = '" . $this->modelo . "', categoria = " . $this->categoria 
@@ -199,5 +223,15 @@ class producto extends conexion {
         
         return $verificar;   
     } 
+
+    // Implementamos metodo para ejecutar la eliminacion. En este caso es una baja logica.
+    private function eliminarProducto() 
+    {
+        $query = "UPDATE " . $this->table . " SET estado = 0 WHERE productoId = " . $this->productoId;
+
+        $verificar = parent::nonQuery($query);
+
+        return $verificar;
+    }
 }
 ?>
