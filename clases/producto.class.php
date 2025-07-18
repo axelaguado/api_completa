@@ -17,6 +17,7 @@ class producto extends conexion {
     private $descripcion = "";
     private $imagen = "";
     private $estado = 0; 
+    private $token;
 
     public function listarProductos($pagina = 1) {
         $inicio = 0; // fila en la que arranca.
@@ -51,61 +52,82 @@ class producto extends conexion {
     {
         $respuesta = new respuesta;
         
-        //Como lo que recibimos es un json, primero lo decodificamos como array asociativo. 
+        // Como lo que recibimos es un json, primero lo decodificamos como array asociativo. 
         $datos = json_decode($json, true);
 
-        if(!isset($datos['productoId']) || !isset($datos['categoria'])) 
+        // Verificamos que el token es enviado en la solicitud.
+        if(!isset($datos['token']))
         {
-            return $respuesta->error_400();
-        } 
-        else
+            return $respuesta->error_401();
+        }
+        else 
         {
-            //Falta manejar errores de las variable no asignadas.
-            $this->productoId = $datos['productoId'];
+            // Seteamos y Verificamos la existencia del token. 
+            $this->token = $datos['token'];
+            $arrayToken = $this->buscarToken();
 
-            if(isset($datos['marca'])){
-                $this->marca =  $datos['marca'];
-            }
+            if($arrayToken != 0)
+            { 
+
+                if(!isset($datos['productoId']) || !isset($datos['categoria'])) 
+                {
+                    return $respuesta->error_400();
+                } 
+                else
+                {  
+                    $this->productoId = $datos['productoId'];
+
+                    if(isset($datos['marca'])){
+                        $this->marca =  $datos['marca'];
+                    }
             
-            if(isset($datos['modelo'])){
-                $this->modelo =  $datos['modelo'];
-            }
+                    if(isset($datos['modelo'])){
+                        $this->modelo =  $datos['modelo'];
+                    }
              
-            $this->categoria =  $datos['categoria'];
+                    $this->categoria =  $datos['categoria'];
 
-            if(isset($datos['precio'])){
-               $this->precio =  $datos['precio'];
-            }
+                    if(isset($datos['precio'])){
+                        $this->precio =  $datos['precio'];
+                    }
              
-            if(isset($datos['stock'] )){
-                $this->stock = $datos['stock']  ;
-            }
+                    if(isset($datos['stock'] )){
+                        $this->stock = $datos['stock']  ;
+                    }
 
-            if(isset( $datos['descripcion'])){
-                $this->descripcion = $datos['descripcion'] ;
+                    if(isset( $datos['descripcion'])){
+                        $this->descripcion = $datos['descripcion'] ;
+                    } 
+
+                    // Ver que onda el tratamiento de imagenes.
+                    if(isset($datos['imagen'] )){
+                        $this->imagen =  $datos['imagen'];
+                    }
+
+                    if(isset($datos['estado'] )){
+                        $this->estado =  $datos['estado'];  
+                    } 
+
+                    $response = $this->insertarProducto(); 
+
+                    if ($response == -1) {
+                        return  $respuesta->error_500(); 
+                    } 
+                    else 
+                    {
+                        $result = $respuesta->response;
+                        $result['result'] = array(
+                                'Producto' => 'El producto se registro correctamente [' . $response . ']' 
+                            );
+                        return $result;
+                    }
+                }  
             } 
-
-            // Ver que onda el tratamiento de imagenes.
-            if(isset($datos['imagen'] )){
-                $this->imagen =  $datos['imagen'];
-            }
-
-            if(isset($datos['estado'] )){
-                 $this->estado =  $datos['estado'];  
+            else
+            {
+                return $respuesta->error_401("El Token que envio es invalido o ha caducado");
             } 
-
-            $response = $this->insertarProducto(); 
-
-            if ($response == -1) {
-                return  $respuesta->error_500(); 
-            } else {
-                $result = $respuesta->response;
-                $result['result'] = array(
-                    'Producto' => 'El producto se registro correctamente [' . $response . ']' 
-                );
-                return $result;
-            }
-        } 
+        }
     }
 
     public function put($json) 
@@ -115,61 +137,80 @@ class producto extends conexion {
         //Como lo que recibimos es un json, primero lo decodificamos como array asociativo. 
         $datos = json_decode($json, true);
 
-        if(!isset($datos['productoId']))  
+        if(!isset($datos['token']))
         {
-            return $respuesta->error_400();
-        } 
-        else
+            return $respuesta->error_401();
+        }
+        else 
         {
-            //Falta manejar errores de las variable no asignadas.
-            $this->productoId = $datos['productoId'];
+            // Seteamos y Verificamos la existencia del token. 
+            $this->token = $datos['token'];
+            $arrayToken = $this->buscarToken();
 
-            if(isset($datos['marca'])){
-                $this->marca =  $datos['marca'];
-            }
+            if($arrayToken != 0)
+            { 
+                if(!isset($datos['productoId']))  
+                {
+                    return $respuesta->error_400();
+                } 
+                else
+                {
+                    $this->productoId = $datos['productoId'];
+
+                    if(isset($datos['marca'])){
+                        $this->marca =  $datos['marca'];
+                    }
             
-            if(isset($datos['modelo'])){
-                $this->modelo =  $datos['modelo'];
-            }
+                    if(isset($datos['modelo'])){
+                        $this->modelo =  $datos['modelo'];
+                    }
              
-            if(isset($datos['categoria'])){
-                 $this->categoria =  $datos['categoria'];
-            } 
+                    if(isset($datos['categoria'])){
+                        $this->categoria =  $datos['categoria'];
+                    } 
 
-            if(isset($datos['precio'])){
-               $this->precio =  $datos['precio'];
-            }
+                    if(isset($datos['precio'])){
+                        $this->precio =  $datos['precio'];
+                    }
              
-            if(isset($datos['stock'] )){
-                $this->stock = $datos['stock']  ;
-            }
+                    if(isset($datos['stock'] )){
+                        $this->stock = $datos['stock']  ;
+                    }
 
-            if(isset( $datos['descripcion'])){
-                $this->descripcion = $datos['descripcion'] ;
-            } 
+                    if(isset( $datos['descripcion'])){
+                        $this->descripcion = $datos['descripcion'] ;
+                    } 
 
-            // Ver que onda el tratamiento de imagenes.
-            if(isset($datos['imagen'] )){
-                $this->imagen =  $datos['imagen'];
-            }
+                    // Ver que onda el tratamiento de imagenes.
+                    if(isset($datos['imagen'] )){
+                        $this->imagen =  $datos['imagen'];
+                    }
 
-            if(isset($datos['estado'] )){
-                 $this->estado =  $datos['estado'];  
-            } 
+                    if(isset($datos['estado'] )){
+                        $this->estado =  $datos['estado'];  
+                    } 
 
-            $response = $this->actualizarProducto();  
+                    $response = $this->actualizarProducto();  
  
-            if ($response < 1) {
-                return  $respuesta->error_500(); 
-            } else {
-                $result = $respuesta->response;
-                $result['result'] = array(
-                    'Producto' => 'El producto se actualizo correctamente [' . $response . ']' 
-                );
-                return $result;
+                    if ($response < 1) {
+                        return  $respuesta->error_500(); 
+                    } 
+                    else 
+                    {
+                        $result = $respuesta->response;
+                        $result['result'] = array(
+                        'Producto' => 'El producto se actualizo correctamente [' . $response . ']' 
+                        );
+                        return $result;
+                    }  
+                }
+            }
+            else
+            {
+                return $respuesta->error_401("El Token que envio es invalido o ha caducado");
             } 
-        } 
-
+ 
+        }  
     }
 
     public function delete($json){
@@ -177,23 +218,45 @@ class producto extends conexion {
 
         $datosArray = json_decode($json, true);
 
-        if(!isset($datosArray['productoId'])){
-            return $respuesta->error_400();
-        }else {
-            $this->productoId = $datosArray['productoId'];
+        if(!isset($datosArray['token']))
+        {
+            return $respuesta->error_401();
+        }
+        else 
+        {
+            // Seteamos y Verificamos la existencia del token. 
+            $this->token = $datosArray['token'];
+            $arrayToken = $this->buscarToken();
 
-            $response = $this->eliminarProducto(); 
+            if($arrayToken != 0)
+            { 
+                if(!isset($datosArray['productoId'])){
+                    return $respuesta->error_400();
+                }
+                else 
+                {
+                    $this->productoId = $datosArray['productoId'];
+
+                    $response = $this->eliminarProducto(); 
              
-            if ($response < 1) {
-                return $respuesta->error_500();
-            } else {
-                $result = $respuesta->response;
-                $result['result'] = array( 
-                    'Producto' => 'El producto se dio de baja correctamente. ['. $response . ']' 
-                );   
-                return $result;
-            }   
-        } 
+                    if ($response < 1) {
+                        return $respuesta->error_500();
+                    } 
+                    else 
+                    {
+                        $result = $respuesta->response;
+                        $result['result'] = array( 
+                        'Producto' => 'El producto se dio de baja correctamente. ['. $response . ']' 
+                        );   
+                        return $result;
+                    }   
+                } 
+            }
+            else
+            {
+                return $respuesta->error_401("El Token que envio es invalido o ha caducado");
+            }
+        }  
     }
 
 
@@ -232,6 +295,29 @@ class producto extends conexion {
         $verificar = parent::nonQuery($query);
 
         return $verificar;
+    }
+
+    // Verificamos la existencia del token enviado en la solicitud.
+    private function buscarToken(){
+        $query = "SELECT  token_id, usuario_id, estado from usuario_token WHERE token = '" . $this->token . "' AND estado = 'ACTIVO'";
+        $resp = parent::obtenerDatos($query);
+        if($resp){
+            return $resp;
+        }else{
+            return 0;
+        }
+    }
+
+    // Cada vez que hacemos una solicitud se debeb actualizar el token para saber que sigue activo.    
+    private function actualizarToken($tokenid){
+        $date = date("Y-m-d H:i");
+        $query = "UPDATE usuario_token SET Fecha = '$date' WHERE TokenId = '$tokenid' ";
+        $resp = parent::nonQuery($query);
+        if($resp >= 1){
+            return $resp;
+        }else{
+            return 0;
+        }
     }
 }
 ?>
