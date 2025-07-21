@@ -61,6 +61,11 @@ $_response = new respuesta();
         // Obtenemos los datos del json.
         $response = file_get_contents("php://input");
 
+        // Tambien puede ocurrir que los datos, en vez de ser enviado en el body, 
+        // sean enviados en el header. Esto conlleva a conocer los enzabezados:
+        // $headers = getallheaders(); 
+        // Esos datos los envio como json al metodo delete.
+
         // Procesamos los datos.
         $datosArray = $_producto->delete($response); 
      

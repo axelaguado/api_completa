@@ -17,7 +17,7 @@ class producto extends conexion {
     private $descripcion = "";
     private $imagen = "";
     private $estado = 0; 
-    private $token;
+    private $token;  
 
     public function listarProductos($pagina = 1) {
         $inicio = 0; // fila en la que arranca.
@@ -54,7 +54,7 @@ class producto extends conexion {
         
         // Como lo que recibimos es un json, primero lo decodificamos como array asociativo. 
         $datos = json_decode($json, true);
-
+ 
         // Verificamos que el token es enviado en la solicitud.
         if(!isset($datos['token']))
         {
@@ -106,8 +106,21 @@ class producto extends conexion {
 
                     if(isset($datos['estado'] )){
                         $this->estado =  $datos['estado'];  
-                    } 
-
+                    }
+                    
+                     if(isset($datos['imagen'] )){
+                        $procesamiento = $this->procesarImagen($datos['imagen']);
+                         
+                        if($procesamiento === 0) {
+                            $error = 'La imagen no pudo ser guardada.';
+                        }
+                        else
+                        {
+                            $this->imagen = $procesamiento; 
+                            $error = '[1]'; 
+                        } 
+                    }
+ 
                     $response = $this->insertarProducto(); 
 
                     if ($response == -1) {
@@ -117,7 +130,8 @@ class producto extends conexion {
                     {
                         $result = $respuesta->response;
                         $result['result'] = array(
-                                'Producto' => 'El producto se registro correctamente [' . $response . ']' 
+                                'Producto' => 'El producto se registro correctamente [' . $response . ']',
+                                'Imagen' => $error   
                             );
                         return $result;
                     }
@@ -128,7 +142,48 @@ class producto extends conexion {
                 return $respuesta->error_401("El Token que envio es invalido o ha caducado");
             } 
         }
+           
     }
+
+    /*
+        Algunos lenguajes encriptan imagenes en base64. 
+        No estoy seguro si sea la forma adecuada de guardar una imagen debido a que guarda toda la ruta como tal.  
+    */ 
+    private function procesarImagen($img)
+    {
+        // $fichero = dirname(__DIR__); = C:\xampp\htdocs\api_completa
+        $direccion = dirname(__DIR__) . '\public\imagenes\\';
+
+        // Separamos el contenido en funcion de nuetro interes. Ej:
+        // [0] = data: image/png
+        // [1] = encirptacion base64.
+        $partes = explode(";base64,", $img);  
+
+        // $extension = mime_content_type($img); --> Retorna = 'image/png'.
+        // La siguiente linea separa 'image/png' covirtiendo el un array. { '0' => 'image', '1' => 'png'}.
+        // Al agregarle la posicion del array solo nos indicaria el valor en dicha posicion. 
+        $extension = explode('/', mime_content_type($img))[1]; 
+         
+        // Decodificamos los datos encriptados.
+        $imagen_base64 = base64_decode($partes[1]);
+ 
+        // Creamos la ruta.
+        $file = $direccion . uniqid() . "." . $extension;
+        // Agregamos la imagen decodificada al archivo.
+        $resultado = file_put_contents($file, $imagen_base64);
+        
+        // Le damos formato para almacenar.
+        $nuevaDireccion = str_replace('\\', '/', $file);
+        
+        if ($resultado != false)
+        {
+            return $nuevaDireccion;
+        }
+        else
+        {
+            return 0; 
+        } 
+    } 
 
     public function put($json) 
     {
